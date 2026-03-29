@@ -1,0 +1,46 @@
+# Python
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+.venv
+
+# Data (large, not committed)
+data/images/
+data/social/followers/
+data/social/following/
+
+# Embeddings (large, regenerable)
+embeddings/*.npy
+embeddings/*.pt
+embeddings/*.pickle
+
+# Distances (regenerable)
+distances/*.npy
+
+# Graphs (regenerable)
+graphs/*.npy
+graphs/*.graphml
+graphs/*.gexf
+graphs/*.gml
+graphs/*.net
+graphs/*.edgelist
+
+# Environment
+.env
+
+# OS
+.DS_Store
+
+# R
+.Rhistory
+.RData
+
+# IDE
+.vscode/
+.idea/
+
+# Claude
+.claude/
