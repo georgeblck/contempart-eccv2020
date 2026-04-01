@@ -37,7 +37,7 @@ uv run python -m src.step7_association        # Section 6.2: Cramer's V tests
 
 ## Data
 
-Download the pre-computed artifacts from Zenodo (DOI pending) and extract into `data/`:
+Download the pre-computed artifacts from [Zenodo](https://doi.org/10.5281/zenodo.19367364) and extract into `data/`:
 
 ```
 data/
