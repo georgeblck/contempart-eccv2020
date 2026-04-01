@@ -18,6 +18,8 @@ Usage:
     uv run python -m src.step3_cluster
 """
 
+from __future__ import annotations
+
 import pickle
 from pathlib import Path
 
@@ -26,18 +28,17 @@ import pandas as pd
 import sklearn.cluster
 import sklearn.metrics
 
-
 ANALYSIS_DIR = Path("/Users/nikolaihuckle/Documents/projects/artAnalysis/visart2020")
 RESULTS_DIR = Path("results")
 
 
-def purity_score(y_true: list, y_pred: np.ndarray) -> float:
+def purity_score(y_true: list[int], y_pred: np.ndarray) -> float:
     """Purity: fraction of images correctly assigned by majority vote per cluster."""
     cm = sklearn.metrics.cluster.contingency_matrix(y_true, y_pred)
-    return np.sum(np.amax(cm, axis=0)) / np.sum(cm)
+    return float(np.sum(np.amax(cm, axis=0)) / np.sum(cm))
 
 
-def main():
+def main() -> None:
     RESULTS_DIR.mkdir(exist_ok=True)
 
     # Load WikiArt labels
@@ -56,7 +57,7 @@ def main():
     # Archetype M=35 (WikiArt archetypes use step 5, so k=5,10,...,35)
     arche_path = ANALYSIS_DIR / "archeTypes/rand1992_1000_conv_01234_35.pickle"
     with open(arche_path, "rb") as f:
-        Z = pickle.load(f)
+        _ = pickle.load(f)  # Z (archetypes, unused)
         A = pickle.load(f)
         B = pickle.load(f)
     embeddings["Archetype"] = np.hstack([A, B.T])
@@ -90,13 +91,15 @@ def main():
         print(f"  Max AMI: {max_ami:.3f} at k={max_k}")
         print(f"  AMI at k=20: {ami_scores[3]:.3f}")
 
-        for k, ami, pur in zip(k_range, ami_scores, pur_scores):
-            all_results.append({
-                "embedding": name,
-                "k": k,
-                "AMI": round(ami, 4),
-                "Purity": round(pur, 4),
-            })
+        for k, ami, pur in zip(k_range, ami_scores, pur_scores, strict=True):
+            all_results.append(
+                {
+                    "embedding": name,
+                    "k": k,
+                    "AMI": round(ami, 4),
+                    "Purity": round(pur, 4),
+                }
+            )
 
     # Paper reference
     print("\nPaper says: 'the highest AMI-score of 0.191' (p.10)")

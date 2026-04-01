@@ -15,11 +15,12 @@ Usage:
     uv run python -m src.step0_data
 """
 
+from __future__ import annotations
+
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
-
 
 # Where the raw data lives (not committed to this repo)
 CONTEMPART_DIR = Path("/Users/nikolaihuckle/Documents/projects/contempart")
@@ -38,7 +39,7 @@ def check_file(path: Path, description: str) -> bool:
     return False
 
 
-def main():
+def main() -> None:
     ok = True
     print("=" * 60)
     print("Step 0: Data verification for contempArt ECCV 2020")
@@ -67,15 +68,25 @@ def main():
     image_dir = CONTEMPART_DIR / "visart2020"
     ok &= check_file(image_dir, "Image directory (visart2020/)")
     if image_dir.exists():
-        n_files = sum(1 for _ in image_dir.rglob("*") if _.is_file() and _.suffix.lower() in (".jpg", ".jpeg", ".png", ".webp"))
-        n_folders = sum(1 for d in image_dir.iterdir() if d.is_dir() and not d.name.startswith("."))
+        n_files = sum(
+            1
+            for _ in image_dir.rglob("*")
+            if _.is_file() and _.suffix.lower() in (".jpg", ".jpeg", ".png", ".webp")
+        )
+        n_folders = sum(
+            1 for d in image_dir.iterdir() if d.is_dir() and not d.name.startswith(".")
+        )
         print(f"  Image files on disk: {n_files} (paper: 14,559)")
         print(f"  Artist folders: {n_folders}")
         if n_files < 14559:
-            print(f"  WARNING: {14559 - n_files} images still missing (rsync incomplete?)")
+            print(
+                f"  WARNING: {14559 - n_files} images still missing (rsync incomplete?)"
+            )
 
     followship_path = CONTEMPART_DIR / "instagramFollowship.csv"
-    ok &= check_file(followship_path, "Instagram follow graph (instagramFollowship.csv)")
+    ok &= check_file(
+        followship_path, "Instagram follow graph (instagramFollowship.csv)"
+    )
     if followship_path.exists():
         edges = pd.read_csv(followship_path)
         n_edges = len(edges)
@@ -108,7 +119,11 @@ def main():
         path = ANALYSIS_DIR / name
         if check_file(path, name):
             arr = np.load(path)
-            shape_ok = "OK" if expected_shape is None or arr.shape == expected_shape else f"MISMATCH (expected {expected_shape})"
+            shape_ok = (
+                "OK"
+                if expected_shape is None or arr.shape == expected_shape
+                else f"MISMATCH (expected {expected_shape})"
+            )
             print(f"    Shape: {arr.shape} {shape_ok}")
 
     finaldata_path = ANALYSIS_DIR / "nodeResults/finalData.csv"
@@ -116,7 +131,11 @@ def main():
     if finaldata_path.exists():
         fd = pd.read_csv(finaldata_path, sep=";")
         print(f"  Artists: {len(fd)}")
-        n_schools = fd["university"].nunique() if "university" in fd.columns else "unknown column"
+        n_schools = (
+            fd["university"].nunique()
+            if "university" in fd.columns
+            else "unknown column"
+        )
         print(f"  Schools: {n_schools} (paper: 15)")
 
     # node2vec
@@ -141,7 +160,11 @@ def main():
         path = dist_dir / name
         if check_file(path, name):
             arr = np.load(path)
-            shape_ok = "OK" if arr.shape == expected_shape else f"MISMATCH (expected {expected_shape})"
+            shape_ok = (
+                "OK"
+                if arr.shape == expected_shape
+                else f"MISMATCH (expected {expected_shape})"
+            )
             print(f"    Shape: {arr.shape} {shape_ok}")
 
     # Archetype pickles
@@ -152,7 +175,9 @@ def main():
     wikiart_path = ANALYSIS_DIR / "rand1992_1000.csv"
     if wikiart_path.exists():
         wk = pd.read_csv(wikiart_path, sep="\t")
-        print(f"  WikiArt sample: {len(wk)} images, {wk['Style1'].nunique() if 'Style1' in wk.columns else '?'} styles")
+        print(
+            f"  WikiArt sample: {len(wk)} images, {wk['Style1'].nunique() if 'Style1' in wk.columns else '?'} styles"
+        )
 
     # ---- Summary ----
     print("\n" + "=" * 60)

@@ -25,6 +25,8 @@ Usage:
     uv run python -m src.step5_correlations
 """
 
+from __future__ import annotations
+
 import pickle
 from pathlib import Path
 
@@ -32,7 +34,6 @@ import numpy as np
 import pandas as pd
 from scipy.spatial.distance import pdist, squareform
 from scipy.stats import spearmanr
-
 
 ANALYSIS_DIR = Path("/Users/nikolaihuckle/Documents/projects/artAnalysis/visart2020")
 ORIGINAL_2020 = Path("data/original_2020")
@@ -43,7 +44,10 @@ def load_364_artist_order() -> list[str]:
     """Get the 364-artist ordering matching the social distance matrices."""
     allDat = pd.read_csv(ANALYSIS_DIR / "nodeResults/finalData.csv", sep=";")
     allDat.rename(
-        columns={"instagramHandle.x": "instagramHandleX", "instagramHandle.y": "instagramHandleY"},
+        columns={
+            "instagramHandle.x": "instagramHandleX",
+            "instagramHandle.y": "instagramHandleY",
+        },
         inplace=True,
     )
     insta_dat = allDat.dropna(subset=["instagramHandleY"])
@@ -53,19 +57,21 @@ def load_364_artist_order() -> list[str]:
     return n2vDat["ID"].tolist()
 
 
-def compute_centroid_cosine(emb: np.ndarray, manifest: pd.DataFrame, artist_order: list[str]) -> np.ndarray:
+def compute_centroid_cosine(
+    emb: np.ndarray, manifest: pd.DataFrame, artist_order: list[str]
+) -> np.ndarray:
     """Compute per-artist centroid, then pairwise cosine distance matrix."""
-    centroids = []
+    centroids: list[np.ndarray] = []
     for artist_id in artist_order:
         mask = manifest["labelsCat"] == artist_id
         if mask.sum() == 0:
             centroids.append(np.zeros(emb.shape[1]))
             continue
-        centroids.append(emb[mask.values].mean(axis=0))
-    return squareform(pdist(np.array(centroids), metric="cosine"))
+        centroids.append(emb[np.asarray(mask)].mean(axis=0))
+    return np.asarray(squareform(pdist(np.array(centroids), metric="cosine")))
 
 
-def main():
+def main() -> None:
     RESULTS_DIR.mkdir(exist_ok=True)
 
     manifest = pd.read_csv(ANALYSIS_DIR / "contempArtv2.csv", sep="\t")
@@ -84,7 +90,7 @@ def main():
 
     # Archetype (M=36, so 2M=72 dims)
     with open(ANALYSIS_DIR / "archeTypes/contempArtV3_conv_01234_36.pickle", "rb") as f:
-        Z = pickle.load(f)
+        _ = pickle.load(f)  # Z (archetypes, unused)
         A = pickle.load(f)
         B = pickle.load(f)
     embeddings["Archetype"] = np.hstack([A, B.T])
@@ -101,7 +107,9 @@ def main():
         rho_gu, _ = spearmanr(small_n2v[idx], cos_dist[idx])
         rho_gy, _ = spearmanr(big_n2v[idx], cos_dist[idx])
         print(f"{name:12s} {rho_gu:8.3f} {rho_gy:8.3f}")
-        rows.append({"embedding": name, "G_U": round(rho_gu, 3), "G_Y": round(rho_gy, 3)})
+        rows.append(
+            {"embedding": name, "G_U": round(rho_gu, 3), "G_Y": round(rho_gy, 3)}
+        )
 
     print("-" * 30)
     print("\nPaper Table 3:")

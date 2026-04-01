@@ -23,6 +23,8 @@ Usage:
     uv run python -m src.step4_distances
 """
 
+from __future__ import annotations
+
 import pickle
 from pathlib import Path
 
@@ -30,12 +32,13 @@ import numpy as np
 import pandas as pd
 from scipy.spatial.distance import cosine
 
-
 ANALYSIS_DIR = Path("/Users/nikolaihuckle/Documents/projects/artAnalysis/visart2020")
 RESULTS_DIR = Path("results")
 
 
-def compute_table2(emb: np.ndarray, manifest: pd.DataFrame) -> tuple[float, float, float, float]:
+def compute_table2(
+    emb: np.ndarray, manifest: pd.DataFrame
+) -> tuple[float, float, float, float]:
     """Compute sigma_c and sigma_c_global for one embedding type.
 
     Returns: (sigma_c_mean, sigma_c_std, sigma_c_global_mean, sigma_c_global_std)
@@ -43,8 +46,8 @@ def compute_table2(emb: np.ndarray, manifest: pd.DataFrame) -> tuple[float, floa
     artists = manifest["labelsCat"].unique()
 
     # Per-artist: centroid and mean cosine distance to centroid
-    artist_sigmas = []
-    all_distances_to_global = []
+    artist_sigmas: list[float] = []
+    all_distances_to_global: list[float] = []
 
     # Global centroid c_N (mean of all image embeddings)
     c_global = emb.mean(axis=0)
@@ -68,15 +71,15 @@ def compute_table2(emb: np.ndarray, manifest: pd.DataFrame) -> tuple[float, floa
         global_dists = np.array([cosine(c_global, e) for e in artist_emb])
         all_distances_to_global.extend(global_dists)
 
-    sigma_c_mean = np.mean(artist_sigmas)
-    sigma_c_std = np.std(artist_sigmas)
-    sigma_c_global_mean = np.mean(all_distances_to_global)
-    sigma_c_global_std = np.std(all_distances_to_global)
+    sigma_c_mean = float(np.mean(artist_sigmas))
+    sigma_c_std = float(np.std(artist_sigmas))
+    sigma_c_global_mean = float(np.mean(all_distances_to_global))
+    sigma_c_global_std = float(np.std(all_distances_to_global))
 
     return sigma_c_mean, sigma_c_std, sigma_c_global_mean, sigma_c_global_std
 
 
-def main():
+def main() -> None:
     RESULTS_DIR.mkdir(exist_ok=True)
 
     manifest = pd.read_csv(ANALYSIS_DIR / "contempArtv2.csv", sep="\t")
@@ -89,7 +92,7 @@ def main():
     }
 
     with open(ANALYSIS_DIR / "archeTypes/contempArtV3_conv_01234_36.pickle", "rb") as f:
-        Z = pickle.load(f)
+        _ = pickle.load(f)  # Z (archetypes, unused)
         A = pickle.load(f)
         B = pickle.load(f)
     embeddings["Archetype"] = np.hstack([A, B.T])
@@ -105,13 +108,15 @@ def main():
     for name, emb in embeddings.items():
         sc_m, sc_s, sg_m, sg_s = compute_table2(emb, manifest)
         print(f"{name:12s} {sc_m:.3f} +/- {sc_s:.3f}   {sg_m:.3f} +/- {sg_s:.3f}")
-        rows.append({
-            "embedding": name,
-            "sigma_c": round(sc_m, 3),
-            "sigma_c_std": round(sc_s, 3),
-            "sigma_c_global": round(sg_m, 3),
-            "sigma_c_global_std": round(sg_s, 3),
-        })
+        rows.append(
+            {
+                "embedding": name,
+                "sigma_c": round(sc_m, 3),
+                "sigma_c_std": round(sc_s, 3),
+                "sigma_c_global": round(sg_m, 3),
+                "sigma_c_global_std": round(sg_s, 3),
+            }
+        )
 
     print("-" * 48)
     print("\nPaper Table 2:")

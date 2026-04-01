@@ -17,8 +17,9 @@ embeddings/*.npy
 embeddings/*.pt
 embeddings/*.pickle
 
-# Distances (regenerable)
+# Distances and intermediate results (regenerable)
 distances/*.npy
+results/*.npy
 
 # Graphs (regenerable)
 graphs/*.npy
