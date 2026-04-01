@@ -7,27 +7,11 @@ wheels/
 *.egg-info
 .venv
 
-# Data (large, not committed)
-data/images/
-data/social/followers/
-data/social/following/
+# Data (downloaded from Zenodo, not committed)
+data/
 
-# Embeddings (large, regenerable)
-embeddings/*.npy
-embeddings/*.pt
-embeddings/*.pickle
-
-# Distances and intermediate results (regenerable)
-distances/*.npy
+# Intermediate results
 results/*.npy
-
-# Graphs (regenerable)
-graphs/*.npy
-graphs/*.graphml
-graphs/*.gexf
-graphs/*.gml
-graphs/*.net
-graphs/*.edgelist
 
 # Environment
 .env

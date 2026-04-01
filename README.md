@@ -35,19 +35,27 @@ uv run python -m src.step6_visualize          # Figure 3: t-SNE plots
 uv run python -m src.step7_association        # Section 6.2: Cramer's V tests
 ```
 
-## Data dependencies
+## Data
 
-This repo reads pre-computed artifacts from the original 2020 analysis. These are not included in the repo and must be available locally:
+Download the pre-computed artifacts from Zenodo (DOI pending) and extract into `data/`:
 
-- `artAnalysis/visart2020/rawVGG/contempArtv2.npy` (14,559 x 4,096, VGG FC7)
-- `artAnalysis/visart2020/styleSVD/contempArtV3_conv_01234.npy` (14,559 x 4,096, Gram+SVD)
-- `artAnalysis/visart2020/archeTypes/contempArtV3_conv_01234_36.pickle` (Archetype, M=36)
-- `artAnalysis/visart2020/distances/small_n2v_cos.npy` (364 x 364, G^U)
-- `artAnalysis/visart2020/distances/big_n2v_cos.npy` (364 x 364, G^Y)
-- `artAnalysis/visart2020/contempArtv2.csv` (image manifest)
-- `artAnalysis/visart2020/nodeResults/finalData.csv` (artist metadata)
-- `artAnalysis/visart2020/nodeResults/smallGraphs/smallGraph.csv` (G^U node2vec)
-- WikiArt: `rawVGG/rand1992_1000.npy`, `styleSVD/rand1992_1000_conv_01234.npy`, `archeTypes/rand1992_1000_conv_01234_35.pickle`, `rand1991_1000.csv`
+```
+data/
+  artists.csv                              <- artist metadata (442 rows)
+  images_manifest.csv                      <- image manifest (14,559 rows)
+  graph_gu_node2vec.csv                    <- G^U node2vec embeddings (364 artists)
+  wikiart_metadata.csv                     <- WikiArt sample metadata (20,000 rows)
+  embeddings/
+    vgg_fc7.npy                            <- VGG FC7 (14,559 x 4,096)
+    texture_gram_svd.npy                   <- Gram+SVD texture (14,559 x 4,096)
+    archetype_m36.npy                      <- Archetype M=36 (14,559 x 72)
+    wikiart_vgg_fc7.npy                    <- WikiArt VGG FC7 (20,000 x 4,096)
+    wikiart_texture_gram_svd.npy           <- WikiArt Gram+SVD (20,000 x 4,096)
+    wikiart_archetype_m35.npy              <- WikiArt Archetype M=35 (20,000 x 70)
+  distances/
+    gu_node2vec_cosine.npy                 <- G^U cosine distance (364 x 364)
+    gy_node2vec_cosine.npy                 <- G^Y cosine distance (364 x 364)
+```
 
 ## Notes
 

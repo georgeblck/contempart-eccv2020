@@ -25,15 +25,17 @@ Usage:
 
 from __future__ import annotations
 
-import pickle
-from pathlib import Path
-
 import numpy as np
 import pandas as pd
 from scipy.spatial.distance import cosine
 
-ANALYSIS_DIR = Path("/Users/nikolaihuckle/Documents/projects/artAnalysis/visart2020")
-RESULTS_DIR = Path("results")
+from .paths import (
+    ARCHETYPE_PATH,
+    MANIFEST_PATH,
+    RESULTS_DIR,
+    TEXTURE_EMB_PATH,
+    VGG_EMB_PATH,
+)
 
 
 def compute_table2(
@@ -82,20 +84,16 @@ def compute_table2(
 def main() -> None:
     RESULTS_DIR.mkdir(exist_ok=True)
 
-    manifest = pd.read_csv(ANALYSIS_DIR / "contempArtv2.csv", sep="\t")
+    manifest = pd.read_csv(MANIFEST_PATH, sep="\t")
     print(f"Images: {len(manifest)}, Artists: {manifest['labelsCat'].nunique()}")
 
     # Three embedding types
     embeddings = {
-        "VGG": np.load(ANALYSIS_DIR / "rawVGG/contempArtv2.npy"),
-        "Texture": np.load(ANALYSIS_DIR / "styleSVD/contempArtV3_conv_01234.npy"),
+        "VGG": np.load(VGG_EMB_PATH),
+        "Texture": np.load(TEXTURE_EMB_PATH),
     }
 
-    with open(ANALYSIS_DIR / "archeTypes/contempArtV3_conv_01234_36.pickle", "rb") as f:
-        _ = pickle.load(f)  # Z (archetypes, unused)
-        A = pickle.load(f)
-        B = pickle.load(f)
-    embeddings["Archetype"] = np.hstack([A, B.T])
+    embeddings["Archetype"] = np.load(ARCHETYPE_PATH)
 
     print()
     print("=" * 60)

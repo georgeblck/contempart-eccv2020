@@ -27,22 +27,27 @@ Usage:
 
 from __future__ import annotations
 
-import pickle
-from pathlib import Path
-
 import numpy as np
 import pandas as pd
 from scipy.spatial.distance import pdist, squareform
 from scipy.stats import spearmanr
 
-ANALYSIS_DIR = Path("/Users/nikolaihuckle/Documents/projects/artAnalysis/visart2020")
-ORIGINAL_2020 = Path("data/original_2020")
-RESULTS_DIR = Path("results")
+from .paths import (
+    ARCHETYPE_PATH,
+    ARTIST_META_PATH,
+    GU_DIST_PATH,
+    GY_DIST_PATH,
+    MANIFEST_PATH,
+    RESULTS_DIR,
+    SMALL_GRAPH_PATH,
+    TEXTURE_EMB_PATH,
+    VGG_EMB_PATH,
+)
 
 
 def load_364_artist_order() -> list[str]:
     """Get the 364-artist ordering matching the social distance matrices."""
-    allDat = pd.read_csv(ANALYSIS_DIR / "nodeResults/finalData.csv", sep=";")
+    allDat = pd.read_csv(ARTIST_META_PATH, sep=";")
     allDat.rename(
         columns={
             "instagramHandle.x": "instagramHandleX",
@@ -52,7 +57,7 @@ def load_364_artist_order() -> list[str]:
     )
     insta_dat = allDat.dropna(subset=["instagramHandleY"])
     insta2ID = insta_dat.set_index("instagramHandleY")["ID"].to_dict()
-    n2vDat = pd.read_csv(ANALYSIS_DIR / "nodeResults/smallGraphs/smallGraph.csv")
+    n2vDat = pd.read_csv(SMALL_GRAPH_PATH)
     n2vDat["ID"] = n2vDat["instagramHandleCheck2"].map(insta2ID)
     return n2vDat["ID"].tolist()
 
@@ -74,26 +79,22 @@ def compute_centroid_cosine(
 def main() -> None:
     RESULTS_DIR.mkdir(exist_ok=True)
 
-    manifest = pd.read_csv(ANALYSIS_DIR / "contempArtv2.csv", sep="\t")
+    manifest = pd.read_csv(MANIFEST_PATH, sep="\t")
     artist_order = load_364_artist_order()
 
     # Load pre-computed social distance matrices
-    small_n2v = np.load(ANALYSIS_DIR / "distances/small_n2v_cos.npy")
-    big_n2v = np.load(ANALYSIS_DIR / "distances/big_n2v_cos.npy")
+    small_n2v = np.load(GU_DIST_PATH)
+    big_n2v = np.load(GY_DIST_PATH)
     idx = np.triu_indices(364, k=1)
 
     # Three embedding types
     embeddings = {
-        "VGG": np.load(ANALYSIS_DIR / "rawVGG/contempArtv2.npy"),
-        "Texture": np.load(ANALYSIS_DIR / "styleSVD/contempArtV3_conv_01234.npy"),
+        "VGG": np.load(VGG_EMB_PATH),
+        "Texture": np.load(TEXTURE_EMB_PATH),
     }
 
     # Archetype (M=36, so 2M=72 dims)
-    with open(ANALYSIS_DIR / "archeTypes/contempArtV3_conv_01234_36.pickle", "rb") as f:
-        _ = pickle.load(f)  # Z (archetypes, unused)
-        A = pickle.load(f)
-        B = pickle.load(f)
-    embeddings["Archetype"] = np.hstack([A, B.T])
+    embeddings["Archetype"] = np.load(ARCHETYPE_PATH)
 
     print("=" * 60)
     print("Table 3: Rank correlations of style and network distances")

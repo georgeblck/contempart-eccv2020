@@ -27,9 +27,7 @@ import numpy as np
 import pandas as pd
 from sklearn.manifold import TSNE
 
-ANALYSIS_DIR = Path("/Users/nikolaihuckle/Documents/projects/artAnalysis/visart2020")
-RESULTS_DIR = Path("results")
-PLOTS_DIR = Path("plots")
+from .paths import ARTIST_META_PATH, MANIFEST_PATH, PLOTS_DIR, RESULTS_DIR, VGG_EMB_PATH
 
 # Paul Tol muted + extras for 15 schools
 SCHOOL_COLORS = [
@@ -112,9 +110,9 @@ def main() -> None:
     PLOTS_DIR.mkdir(exist_ok=True)
 
     # Load data
-    manifest = pd.read_csv(ANALYSIS_DIR / "contempArtv2.csv", sep="\t")
-    metadata = pd.read_csv(ANALYSIS_DIR / "nodeResults/finalData.csv", sep=";")
-    emb = np.load(ANALYSIS_DIR / "rawVGG/contempArtv2.npy")
+    manifest = pd.read_csv(MANIFEST_PATH, sep="\t")
+    metadata = pd.read_csv(ARTIST_META_PATH, sep=";")
+    emb = np.load(VGG_EMB_PATH)
 
     print(f"Images: {len(manifest)}, Artists: {len(metadata)}, Embeddings: {emb.shape}")
 

@@ -15,15 +15,12 @@ Usage:
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import numpy as np
 import pandas as pd
 from scipy.stats import chi2_contingency
 from sklearn.cluster import KMeans
 
-ANALYSIS_DIR = Path("/Users/nikolaihuckle/Documents/projects/artAnalysis/visart2020")
-RESULTS_DIR = Path("results")
+from .paths import ARTIST_META_PATH, MANIFEST_PATH, RESULTS_DIR, VGG_EMB_PATH
 
 
 def cramers_v(x: pd.Series, y: pd.Series) -> tuple[float, float]:
@@ -41,9 +38,9 @@ def cramers_v(x: pd.Series, y: pd.Series) -> tuple[float, float]:
 def main() -> None:
     RESULTS_DIR.mkdir(exist_ok=True)
 
-    manifest = pd.read_csv(ANALYSIS_DIR / "contempArtv2.csv", sep="\t")
-    metadata = pd.read_csv(ANALYSIS_DIR / "nodeResults/finalData.csv", sep=";")
-    emb = np.load(ANALYSIS_DIR / "rawVGG/contempArtv2.npy")
+    manifest = pd.read_csv(MANIFEST_PATH, sep="\t")
+    metadata = pd.read_csv(ARTIST_META_PATH, sep=";")
+    emb = np.load(VGG_EMB_PATH)
 
     # Map images to artist metadata
     id2meta = metadata.set_index("ID").to_dict("index")

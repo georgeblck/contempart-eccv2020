@@ -20,16 +20,18 @@ Usage:
 
 from __future__ import annotations
 
-import pickle
-from pathlib import Path
-
 import numpy as np
 import pandas as pd
 import sklearn.cluster
 import sklearn.metrics
 
-ANALYSIS_DIR = Path("/Users/nikolaihuckle/Documents/projects/artAnalysis/visart2020")
-RESULTS_DIR = Path("results")
+from .paths import (
+    RESULTS_DIR,
+    WIKIART_ARCHETYPE_PATH,
+    WIKIART_META_PATH,
+    WIKIART_TEXTURE_PATH,
+    WIKIART_VGG_PATH,
+)
 
 
 def purity_score(y_true: list[int], y_pred: np.ndarray) -> float:
@@ -42,7 +44,7 @@ def main() -> None:
     RESULTS_DIR.mkdir(exist_ok=True)
 
     # Load WikiArt labels
-    wikiart = pd.read_csv(ANALYSIS_DIR / "rand1991_1000.csv", sep="\t")
+    wikiart = pd.read_csv(WIKIART_META_PATH, sep="\t")
     wikiart["Style1rCat"] = wikiart["Style1r"].astype("category")
     labels = wikiart["Style1rCat"].cat.codes.tolist()
     n_styles = wikiart["Style1r"].nunique()
@@ -50,17 +52,12 @@ def main() -> None:
 
     # Three embedding types
     embeddings = {
-        "VGG": np.load(ANALYSIS_DIR / "rawVGG/rand1992_1000.npy"),
-        "Texture": np.load(ANALYSIS_DIR / "styleSVD/rand1992_1000_conv_01234.npy"),
+        "VGG": np.load(WIKIART_VGG_PATH),
+        "Texture": np.load(WIKIART_TEXTURE_PATH),
     }
 
     # Archetype M=35 (WikiArt archetypes use step 5, so k=5,10,...,35)
-    arche_path = ANALYSIS_DIR / "archeTypes/rand1992_1000_conv_01234_35.pickle"
-    with open(arche_path, "rb") as f:
-        _ = pickle.load(f)  # Z (archetypes, unused)
-        A = pickle.load(f)
-        B = pickle.load(f)
-    embeddings["Archetype"] = np.hstack([A, B.T])
+    embeddings["Archetype"] = np.load(WIKIART_ARCHETYPE_PATH)
 
     k_range = list(range(5, 75, 5))  # k = 5, 10, ..., 70
 
