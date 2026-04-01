@@ -1,5 +1,5 @@
 """
-Step 5: Reproduce Table 3 from the paper.
+Step 6: Reproduce Table 3 from the paper.
 
 "Rank correlations of style and network distances."
 
@@ -22,16 +22,21 @@ Expected results (Table 3):
   | Archetype | .012  | -.057 |
 
 Usage:
-    uv run python -m src.step5_correlations
+    uv run python -m src.step6_correlations
 """
 
 from __future__ import annotations
 
 import numpy as np
 import pandas as pd
-from scipy.spatial.distance import pdist, squareform
-from scipy.stats import spearmanr
 
+from .core import (
+    compute_artist_centroids,
+    cosine_distance_matrix,
+    load_artist_metadata,
+    load_manifest,
+    spearman_upper_triangle,
+)
 from .paths import (
     ARCHETYPE_PATH,
     ARTIST_META_PATH,
@@ -47,7 +52,7 @@ from .paths import (
 
 def load_364_artist_order() -> list[str]:
     """Get the 364-artist ordering matching the social distance matrices."""
-    allDat = pd.read_csv(ARTIST_META_PATH, sep=";")
+    allDat = load_artist_metadata(ARTIST_META_PATH)
     allDat.rename(
         columns={
             "instagramHandle.x": "instagramHandleX",
@@ -62,30 +67,15 @@ def load_364_artist_order() -> list[str]:
     return n2vDat["ID"].tolist()
 
 
-def compute_centroid_cosine(
-    emb: np.ndarray, manifest: pd.DataFrame, artist_order: list[str]
-) -> np.ndarray:
-    """Compute per-artist centroid, then pairwise cosine distance matrix."""
-    centroids: list[np.ndarray] = []
-    for artist_id in artist_order:
-        mask = manifest["labelsCat"] == artist_id
-        if mask.sum() == 0:
-            centroids.append(np.zeros(emb.shape[1]))
-            continue
-        centroids.append(emb[np.asarray(mask)].mean(axis=0))
-    return np.asarray(squareform(pdist(np.array(centroids), metric="cosine")))
-
-
 def main() -> None:
     RESULTS_DIR.mkdir(exist_ok=True)
 
-    manifest = pd.read_csv(MANIFEST_PATH, sep="\t")
+    manifest = load_manifest(MANIFEST_PATH)
     artist_order = load_364_artist_order()
 
     # Load pre-computed social distance matrices
     small_n2v = np.load(GU_DIST_PATH)
     big_n2v = np.load(GY_DIST_PATH)
-    idx = np.triu_indices(364, k=1)
 
     # Three embedding types
     embeddings = {
@@ -104,9 +94,10 @@ def main() -> None:
 
     rows = []
     for name, emb in embeddings.items():
-        cos_dist = compute_centroid_cosine(emb, manifest, artist_order)
-        rho_gu, _ = spearmanr(small_n2v[idx], cos_dist[idx])
-        rho_gy, _ = spearmanr(big_n2v[idx], cos_dist[idx])
+        centroids = compute_artist_centroids(emb, manifest, artist_order)
+        cos_dist = cosine_distance_matrix(centroids)
+        rho_gu, _ = spearman_upper_triangle(small_n2v, cos_dist)
+        rho_gy, _ = spearman_upper_triangle(big_n2v, cos_dist)
         print(f"{name:12s} {rho_gu:8.3f} {rho_gy:8.3f}")
         rows.append(
             {"embedding": name, "G_U": round(rho_gu, 3), "G_Y": round(rho_gy, 3)}

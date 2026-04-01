@@ -1,5 +1,5 @@
 """
-Step 6: Reproduce Figure 3 from the paper.
+Step 7: Reproduce Figure 3 from the paper.
 
 Artist-level t-SNE of VGG FC7 embeddings, colored by art school.
 Also produces t-SNE colored by gender and nationality for Section 6.2.
@@ -12,7 +12,7 @@ Methodology (from paper p.12-14):
   - "There were no visible patterns for any of the available variables" (p.14)
 
 Usage:
-    uv run python -m src.step6_visualize
+    uv run python -m src.step7_visualize
 """
 
 from __future__ import annotations
@@ -27,6 +27,7 @@ import numpy as np
 import pandas as pd
 from sklearn.manifold import TSNE
 
+from .core import compute_artist_centroids, load_artist_metadata, load_manifest
 from .paths import ARTIST_META_PATH, MANIFEST_PATH, PLOTS_DIR, RESULTS_DIR, VGG_EMB_PATH
 
 # Paul Tol muted + extras for 15 schools
@@ -110,22 +111,15 @@ def main() -> None:
     PLOTS_DIR.mkdir(exist_ok=True)
 
     # Load data
-    manifest = pd.read_csv(MANIFEST_PATH, sep="\t")
-    metadata = pd.read_csv(ARTIST_META_PATH, sep=";")
+    manifest = load_manifest(MANIFEST_PATH)
+    metadata = load_artist_metadata(ARTIST_META_PATH)
     emb = np.load(VGG_EMB_PATH)
 
     print(f"Images: {len(manifest)}, Artists: {len(metadata)}, Embeddings: {emb.shape}")
 
     # Per-artist centroid
     artists = sorted(metadata["ID"].unique())
-    centroid_list: list[np.ndarray] = []
-    for artist in artists:
-        mask = manifest["labelsCat"] == artist
-        if mask.sum() > 0:
-            centroid_list.append(emb[mask.values].mean(axis=0))
-        else:
-            centroid_list.append(np.zeros(emb.shape[1]))
-    centroids = np.array(centroid_list)
+    centroids = compute_artist_centroids(emb, manifest, artists)
     print(f"Centroids: {centroids.shape}")
 
     # t-SNE (cosine distance, matching original)
@@ -175,7 +169,7 @@ def main() -> None:
         legend_cols=1,
     )
 
-    print("Step 6 complete.")
+    print("Step 7 complete.")
 
 
 if __name__ == "__main__":

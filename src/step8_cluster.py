@@ -1,5 +1,5 @@
 """
-Step 3: Reproduce Figure 4 from the paper.
+Step 8: Reproduce Figure 4 from the paper.
 
 "Evaluation of style embeddings. Similarity between k-Means clustering
 based on the three unsupervised embeddings and style labels from Wikiart."
@@ -15,7 +15,7 @@ Methodology (from paper p.9-10):
   - "the highest AMI-score of 0.191" (p.10)
 
 Usage:
-    uv run python -m src.step3_cluster
+    uv run python -m src.step8_cluster
 """
 
 from __future__ import annotations
@@ -25,6 +25,7 @@ import pandas as pd
 import sklearn.cluster
 import sklearn.metrics
 
+from .core import purity_score
 from .paths import (
     RESULTS_DIR,
     WIKIART_ARCHETYPE_PATH,
@@ -32,12 +33,6 @@ from .paths import (
     WIKIART_TEXTURE_PATH,
     WIKIART_VGG_PATH,
 )
-
-
-def purity_score(y_true: list[int], y_pred: np.ndarray) -> float:
-    """Purity: fraction of images correctly assigned by majority vote per cluster."""
-    cm = sklearn.metrics.cluster.contingency_matrix(y_true, y_pred)
-    return float(np.sum(np.amax(cm, axis=0)) / np.sum(cm))
 
 
 def main() -> None:

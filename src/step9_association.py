@@ -1,5 +1,5 @@
 """
-Step 7: Reproduce Section 6.2 association tests from the paper.
+Step 9: Reproduce Section 6.2 association tests from the paper.
 
 k-means clustering of image-level VGG embeddings, then Cramer's V
 association test between cluster membership and demographics.
@@ -10,7 +10,7 @@ Methodology (from paper p.14):
   - "There were no visible patterns for any of the available variables" (p.14)
 
 Usage:
-    uv run python -m src.step7_association
+    uv run python -m src.step9_association
 """
 
 from __future__ import annotations
@@ -20,6 +20,7 @@ import pandas as pd
 from scipy.stats import chi2_contingency
 from sklearn.cluster import KMeans
 
+from .core import load_artist_metadata, load_manifest
 from .paths import ARTIST_META_PATH, MANIFEST_PATH, RESULTS_DIR, VGG_EMB_PATH
 
 
@@ -38,8 +39,8 @@ def cramers_v(x: pd.Series, y: pd.Series) -> tuple[float, float]:
 def main() -> None:
     RESULTS_DIR.mkdir(exist_ok=True)
 
-    manifest = pd.read_csv(MANIFEST_PATH, sep="\t")
-    metadata = pd.read_csv(ARTIST_META_PATH, sep=";")
+    manifest = load_manifest(MANIFEST_PATH)
+    metadata = load_artist_metadata(ARTIST_META_PATH)
     emb = np.load(VGG_EMB_PATH)
 
     # Map images to artist metadata

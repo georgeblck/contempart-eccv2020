@@ -16,11 +16,11 @@ All results are reproduced from the original VGG FC7, Gram+SVD Texture, and Arch
 
 | Paper element | Script | Status | Match? |
 |---------------|--------|--------|--------|
-| Table 2 (style variance) | step4_distances.py | reproduced | sigma_c_global exact, sigma_c within 3% |
-| Table 3 (style vs social network) | step5_correlations.py | reproduced | G^U matches to 3 decimal places |
-| Figure 4 (WikiArt AMI/purity) | step3_cluster.py | reproduced | max AMI 0.191 matches paper |
-| Figure 3 (t-SNE by school) | step6_visualize.py | reproduced | no visible school clustering, consistent with paper |
-| Section 6.2 (association tests) | step7_association.py | reproduced | small Cramer's V (0.09-0.15), all significant but tiny |
+| Table 2 (style variance) | step5_variance.py | reproduced | sigma_c_global exact, sigma_c within 3% |
+| Table 3 (style vs social network) | step6_correlations.py | reproduced | G^U matches to 3 decimal places |
+| Figure 4 (WikiArt AMI/purity) | step8_cluster.py | reproduced | max AMI 0.191 matches paper |
+| Figure 3 (t-SNE by school) | step7_visualize.py | reproduced | no visible school clustering, consistent with paper |
+| Section 6.2 (association tests) | step9_association.py | reproduced | small Cramer's V (0.09-0.15), all significant but tiny |
 
 ## Pipeline
 
@@ -28,11 +28,11 @@ All results are reproduced from the original VGG FC7, Gram+SVD Texture, and Arch
 uv sync
 
 uv run python -m src.step0_data              # verify data completeness
-uv run python -m src.step3_cluster            # Figure 4: WikiArt clustering (~45 min)
-uv run python -m src.step4_distances          # Table 2: style variance
-uv run python -m src.step5_correlations       # Table 3: style vs social network
-uv run python -m src.step6_visualize          # Figure 3: t-SNE plots
-uv run python -m src.step7_association        # Section 6.2: Cramer's V tests
+uv run python -m src.step5_variance            # Table 2: style variance
+uv run python -m src.step6_correlations        # Table 3: style vs social network
+uv run python -m src.step7_visualize           # Figure 3: t-SNE plots
+uv run python -m src.step8_cluster             # Figure 4: WikiArt clustering (~45 min)
+uv run python -m src.step9_association         # Section 6.2: Cramer's V tests
 ```
 
 ## Data
