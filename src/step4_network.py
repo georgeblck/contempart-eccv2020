@@ -89,6 +89,7 @@ def main() -> None:
 
     # Load edgelist and artist handles
     edgelist = pd.read_csv(EDGELIST_PATH)
+    edgelist.columns = edgelist.columns.str.lower()
     metadata = pd.read_csv(ARTIST_META_PATH, sep=";")
     artist_handles = set(metadata["instagramHandle.y"].dropna())
 

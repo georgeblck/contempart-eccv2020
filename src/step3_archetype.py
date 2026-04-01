@@ -19,7 +19,13 @@ from __future__ import annotations
 
 import argparse
 
+import numpy as _np_compat
 import numpy as np
+
+# py_pcha uses np.mat which was removed in NumPy 2.0
+if not hasattr(_np_compat, "mat"):
+    _np_compat.mat = _np_compat.asmatrix  # type: ignore[attr-defined]
+
 from py_pcha import PCHA
 
 from .paths import (

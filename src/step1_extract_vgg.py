@@ -36,9 +36,11 @@ from .paths import (
     WIKIART_VGG_PATH,
 )
 
-# VGG-19 conv layers used for Gram matrices (matching paper p.7-8)
-GRAM_LAYERS = ["conv1_1", "conv2_1", "conv3_1", "conv4_1", "conv5_1"]
-GRAM_LAYER_INDICES = [0, 5, 10, 19, 28]  # indices in vgg19.features
+# VGG-19 conv layers used for Gram matrices (matching paper p.7-8).
+# The paper's Table 2 texture results use conv layers 2-5 (not 1-5).
+# Original file naming: "conv_1234" = conv2_1 through conv5_1.
+GRAM_LAYERS = ["conv2_1", "conv3_1", "conv4_1", "conv5_1"]
+GRAM_LAYER_INDICES = [5, 10, 19, 28]  # indices in vgg19.features
 
 PREPROCESS = transforms.Compose(
     [
@@ -94,7 +96,12 @@ def extract_fc7_and_gram(
         h = vgg.features[idx].register_forward_hook(make_hook(idx))
         hooks.append(h)
 
-    # Extract FC7 from classifier[5] (second-to-last FC layer)
+    # Extract FC7 from classifier[3] (second FC Linear layer, pre-ReLU).
+    # classifier layout: [0]=Linear, [1]=ReLU, [2]=Dropout,
+    #                     [3]=Linear (FC7), [4]=ReLU, [5]=Dropout, [6]=Linear
+    # The original extraction used the raw Linear output (with negatives).
+    # Using post-ReLU (classifier[4] or [5]) clips negatives and changes
+    # cosine distances, producing incorrect sigma_c values.
     fc7_features: list[torch.Tensor] = []
 
     def fc7_hook(
@@ -104,7 +111,7 @@ def extract_fc7_and_gram(
     ) -> None:
         fc7_features.append(output.detach().cpu())
 
-    fc7_h = vgg.classifier[5].register_forward_hook(fc7_hook)
+    fc7_h = vgg.classifier[3].register_forward_hook(fc7_hook)
     hooks.append(fc7_h)
 
     all_fc7: list[np.ndarray] = []

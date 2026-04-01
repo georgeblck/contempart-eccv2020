@@ -53,14 +53,17 @@ def compute_sigma_c(
 
     sigma_c = mean across artists of (mean cosine distance to centroid).
     Returns (mean, std) across artists.
+
+    Artists with only one image are excluded (their distance to centroid
+    is trivially 0, and the original R code sets them to NA).
     """
     artists = manifest[label_col].unique()
     artist_sigmas: list[float] = []
 
     for artist in artists:
         mask = manifest[label_col] == artist
-        artist_emb = embeddings[mask.values]
-        if len(artist_emb) == 0:
+        artist_emb = embeddings[np.asarray(mask)]
+        if len(artist_emb) <= 1:
             continue
         centroid = artist_emb.mean(axis=0)
         dists = np.array([cosine(centroid, e) for e in artist_emb])

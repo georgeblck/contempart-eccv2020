@@ -72,6 +72,24 @@ class TestSigmaC:
         assert mean > 0
         assert _std >= 0
 
+    def test_single_image_artists_excluded(self) -> None:
+        """Artists with only 1 image should be excluded from sigma_c."""
+        emb = np.array(
+            [
+                [1.0, 0.0],  # artist_a, img 1
+                [0.8, 0.2],  # artist_a, img 2
+                [0.0, 1.0],  # artist_b, img 1 (single image)
+            ]
+        )
+        manifest = pd.DataFrame({"labelsCat": ["a", "a", "b"]})
+        mean_with_exclusion, _ = compute_sigma_c(emb, manifest)
+        # Only artist_a contributes; artist_b (1 image) is excluded
+        centroid_a = emb[:2].mean(axis=0)
+        from scipy.spatial.distance import cosine
+
+        expected = np.mean([cosine(centroid_a, emb[0]), cosine(centroid_a, emb[1])])
+        assert mean_with_exclusion == pytest.approx(expected, abs=1e-10)
+
 
 class TestSigmaCGlobal:
     def test_identical_images(self) -> None:
