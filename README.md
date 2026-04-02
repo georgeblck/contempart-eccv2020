@@ -6,7 +6,7 @@ A clean, end-to-end reproduction pipeline for the analysis in:
 
 ![t-SNE visualization of ~14,400 artworks from the contempArt dataset](docs/cover.jpg)
 
-See also: [contempart-dataset](https://github.com/georgeblck/contempart-dataset) (dataset + metadata) and [contempart-clip](https://github.com/georgeblck/contempart-clip) (re-analysis with CLIP and Stable Diffusion embeddings).
+See also: [contempart](https://github.com/georgeblck/contempart) (dataset + metadata) and [contempart-clip](https://github.com/georgeblck/contempart-clip) (re-analysis with CLIP and Stable Diffusion embeddings).
 
 ## Goal
 
