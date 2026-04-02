@@ -1,63 +1,101 @@
 # contempart-eccv2020
 
-Reproduction of the analysis from:
+A clean, end-to-end reproduction pipeline for the analysis in:
 
 > Huckle, N., Garcia, N., & Nakashima, Y. (2020). *contempArt: A Multi-Modal Dataset of Contemporary Artworks and Socio-Demographic Data.* ECCV Workshop on Computer Vision for Fashion, Art and Design. [arXiv:2008.09558](https://arxiv.org/abs/2008.09558)
 
-See also: [contempart](https://github.com/georgeblck/contempart) (dataset) and [contempart-clip](https://github.com/georgeblck/contempart-clip) (re-analysis with CLIP/SD embeddings).
+![t-SNE visualization of ~14,400 artworks from the contempArt dataset](docs/cover.jpg)
 
-## What this repo does
+See also: [contempart-dataset](https://github.com/georgeblck/contempart-dataset) (dataset + metadata) and [contempart-clip](https://github.com/georgeblck/contempart-clip) (re-analysis with CLIP and Stable Diffusion embeddings).
 
-Reproduces every table and figure from the paper using the original pre-computed embeddings. The goal is to verify the published results and make the analysis transparent and auditable.
+## Goal
 
-All results are reproduced from the original VGG FC7, Gram+SVD Texture, and Archetype embeddings computed in 2020. No features are re-extracted from images.
-
-## Reproduction status
-
-| Paper element | Script | Status | Match? |
-|---------------|--------|--------|--------|
-| Table 2 (style variance) | step5_variance.py | reproduced | sigma_c_global exact, sigma_c within 3% |
-| Table 3 (style vs social network) | step6_correlations.py | reproduced | G^U matches to 3 decimal places |
-| Figure 4 (WikiArt AMI/purity) | step8_cluster.py | reproduced | max AMI 0.191 matches paper |
-| Figure 3 (t-SNE by school) | step7_visualize.py | reproduced | no visible school clustering, consistent with paper |
-| Section 6.2 (association tests) | step9_association.py | reproduced | small Cramer's V (0.09-0.15), all significant but tiny |
+Provide a transparent, auditable pipeline that goes from raw images to every table and figure in the paper. No manual steps, no pre-computed artifacts required. A student or researcher should be able to clone this repo, point it at the images, and reproduce the full analysis.
 
 ## Pipeline
+
+```mermaid
+flowchart LR
+    A["Images\n+ metadata"] --> B["Step 1\nVGG-19 extraction"]
+    B --> C["FC7 features\n4,096-dim"]
+    B --> D["Gram texture\n4,096-dim"]
+    D --> E["Step 3\nArchetypal analysis"]
+    A --> F["Step 4\nnode2vec"]
+    C & D & E & F --> G["Steps 5-9\nTables, figures,\nassociation tests"]
+```
+
+### Running it
 
 ```bash
 uv sync
 
-uv run python -m src.step0_data              # verify data completeness
-uv run python -m src.step5_variance            # Table 2: style variance
-uv run python -m src.step6_correlations        # Table 3: style vs social network
-uv run python -m src.step7_visualize           # Figure 3: t-SNE plots
-uv run python -m src.step8_cluster             # Figure 4: WikiArt clustering (~45 min)
-uv run python -m src.step9_association         # Section 6.2: Cramer's V tests
+# Feature extraction (~5h CPU, <1h CUDA)
+uv run python -m src.step1_extract_vgg
+
+# Archetypal analysis (~5 min)
+uv run python -m src.step3_archetype
+
+# Social graph + node2vec (~1 min)
+uv run python -m src.step4_network
+
+# Analysis (each <1 min, except step8 ~30 min)
+uv run python -m src.step5_variance
+uv run python -m src.step6_correlations
+uv run python -m src.step7_visualize
+uv run python -m src.step8_cluster
+uv run python -m src.step9_association
 ```
+
+Step 1 supports checkpointing (resumes after interruption) and memory-mapped arrays (runs safely with limited RAM). Use `--limit 100` for a quick test run.
+
+## What each step does
+
+| Step | Script | Paper section | Output |
+|------|--------|---------------|--------|
+| 1 | `step1_extract_vgg.py` | p.7-8 | VGG-19 FC7 features + Gram texture descriptors |
+| 3 | `step3_archetype.py` | p.8-9 | Archetypal analysis mixture weights |
+| 4 | `step4_network.py` | p.12-13 | Social graph distance matrices via node2vec |
+| 5 | `step5_variance.py` | Table 2 | Per-artist and global style variance (sigma_c) |
+| 6 | `step6_correlations.py` | Table 3 | Spearman rho between style and social distances |
+| 7 | `step7_visualize.py` | Figure 3 | t-SNE of artist centroids by school/gender/continent |
+| 8 | `step8_cluster.py` | Figure 4 | k-means AMI and purity on WikiArt styles |
+| 9 | `step9_association.py` | Section 6.2 | Cramer's V between VGG clusters and demographics |
 
 ## Data
 
-Download the pre-computed artifacts from [Zenodo](https://doi.org/10.5281/zenodo.19367364) and extract into `data/`:
+Place the following in `data/` before running:
 
 ```
 data/
-  artists.csv                              <- artist metadata (442 rows)
-  images_manifest.csv                      <- image manifest (14,559 rows)
-  graph_gu_node2vec.csv                    <- G^U node2vec embeddings (364 artists)
-  wikiart_metadata.csv                     <- WikiArt sample metadata (20,000 rows)
-  embeddings/
-    vgg_fc7.npy                            <- VGG FC7 (14,559 x 4,096)
-    texture_gram_svd.npy                   <- Gram+SVD texture (14,559 x 4,096)
-    archetype_m36.npy                      <- Archetype M=36 (14,559 x 72)
-    wikiart_vgg_fc7.npy                    <- WikiArt VGG FC7 (20,000 x 4,096)
-    wikiart_texture_gram_svd.npy           <- WikiArt Gram+SVD (20,000 x 4,096)
-    wikiart_archetype_m35.npy              <- WikiArt Archetype M=35 (20,000 x 70)
-  distances/
-    gu_node2vec_cosine.npy                 <- G^U cosine distance (364 x 364)
-    gy_node2vec_cosine.npy                 <- G^Y cosine distance (364 x 364)
+  contempart_images/           <- 14,559 artwork images
+  wikiart_images/              <- 20,000 WikiArt images
+  artists.csv                  <- artist metadata (442 rows)
+  images_manifest.csv          <- image-to-artist mapping (14,559 rows)
+  edgelist.csv                 <- Instagram follower graph
+  wikiart_metadata.csv         <- WikiArt sample metadata (20,000 rows)
 ```
 
-## Notes
+Download the contempArt dataset from [Zenodo](https://doi.org/10.5281/zenodo.19365430). Pre-computed embeddings are also available on [Zenodo](https://doi.org/10.5281/zenodo.19367364) if you want to skip feature extraction.
 
-- The paper reports 442 artists and 14,559 images. The public [contempart dataset](https://github.com/georgeblck/contempart) contains 441 artists and 14,398 images (1 artist lost, 2 images with encoding issues). The pre-computed embeddings used here contain the full 442/14,559.
-- See [results/inventory.md](results/inventory.md) for a complete mapping of every artifact to its file location.
+## Reproduction notes
+
+VGG FC7 results match the paper exactly (sigma_c = 0.283, max AMI = 0.190 vs paper's 0.191). Texture values are close, with small differences from SVD randomization. Archetype values differ more because this pipeline uses [py_pcha](https://github.com/elaa0505/py_pcha) (Python) instead of SPAMS (C++), and the two solvers find different local optima. The qualitative conclusions are the same across all three embedding types.
+
+### Feature extraction details
+
+VGG-19 features are extracted at 512x512 resolution (LANCZOS interpolation), matching the original pipeline. FC7 comes from the second fully connected layer pre-ReLU (preserving negative activations). Gram texture features concatenate spatial means and Gram matrix upper triangles from conv layers 2-5, normalized by channel count, then reduced to 4,096 dimensions via TruncatedSVD.
+
+CUDA is used when available. MPS (Apple Silicon) is not supported due to a PyTorch limitation with adaptive pooling at non-standard input sizes.
+
+## Citation
+
+```bibtex
+@inproceedings{huckle2020contempart,
+  title={contempArt: A Multi-Modal Dataset of Contemporary Artworks
+         and Socio-Demographic Data},
+  author={Huckle, Nikolai and Garcia, Noa and Nakashima, Yuta},
+  booktitle={European Conference on Computer Vision,
+             Workshop on Computer Vision for Fashion, Art and Design},
+  year={2020}
+}
+```

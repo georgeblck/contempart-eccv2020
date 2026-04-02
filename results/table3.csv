@@ -1,4 +1,4 @@
 embedding,G_U,G_Y
-VGG,-0.003,-0.034
-Texture,0.001,-0.018
-Archetype,-0.007,-0.06
+VGG,0.005,-0.034
+Texture,0.01,-0.03
+Archetype,0.002,-0.044
