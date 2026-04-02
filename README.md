@@ -18,5 +18,5 @@ Download the pre-computed artifacts from [Zenodo](https://doi.org/10.5281/zenodo
 
 ## See also
 
-- [contempart-dataset](https://github.com/georgeblck/contempart-dataset) (dataset + metadata)
+- [contempart](https://github.com/georgeblck/contempart) (dataset + metadata)
 - [contempart-clip](https://github.com/georgeblck/contempart-clip) (re-analysis with CLIP and Stable Diffusion embeddings)
